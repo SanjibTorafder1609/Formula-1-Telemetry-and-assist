@@ -13,61 +13,98 @@ if os.path.exists(JSON_FILE_PATH):
 # Initialize an empty list to store telemetry data
 telemetry_data = []
 
+# Track which packet IDs have already been printed
+printed_packets = set()
+
 def parse_telemetry_data(data):
+    # Check if the received data is large enough
+    if len(data) < 24:  # Minimum size for the header
+        print("Received data is too small to contain a valid packet.")
+        return
+
     # Unpack the packet header
     header_format = '>HBBBBQfIBB'  # Format for PacketHeader
     header_size = struct.calcsize(header_format)
     header_data = struct.unpack_from(header_format, data, 0)
 
     # Extract header information
-    packet_format = header_data[0]
-    game_major_version = header_data[1]
-    game_minor_version = header_data[2]
-    packet_version = header_data[3]
     packet_id = header_data[4]
-    session_uid = header_data[5]
-    session_time = header_data[6]
-    frame_identifier = header_data[7]
-    player_car_index = header_data[8]
-    secondary_player_car_index = header_data[9]
+    packet_names = {
+        0: "Motion data",
+        1: "Session data",
+        2: "Lap data",
+        3: "Event data",
+        4: "Participants data",
+        5: "Car setups data",
+        6: "Car telemetry data",
+        7: "Car status data",
+        8: "Final classification data",
+        9: "Lobby info data",
+        10: "Car damage data",
+        11: "Session history data"
+    }
+    packet_name = packet_names.get(packet_id, "Unknown")
 
-    # Unpack the car telemetry data
-    car_telemetry_data = []
-    telemetry_data_start = header_size  # Start after the header
-
-    for i in range(22):  # There are 22 cars
-        offset = telemetry_data_start + i * 1347  # Each car telemetry data is 1347 bytes
-        car_data_format = '>HffffBhiBHHHBBBBH4f4B'  # Format for CarTelemetryData
-        car_data = struct.unpack_from(car_data_format, data, offset)
-        
-        car_telemetry = {
-            'Speed': car_data[0],  # Speed of car in km/h
-            'Throttle': car_data[1],  # Throttle applied (0.0 to 1.0)
-            'Steering': car_data[2],  # Steering (-1.0 to 1.0)
-            'Brake': car_data[3],  # Brake applied (0.0 to 1.0)
-            'Clutch': car_data[4],  # Clutch (0 to 100)
-            'Gear': car_data[5],  # Gear selected (1-8, N=0, R=-1)
-            #'EngineRPM': car_data[6],  # Engine RPM
-            #'DRS': car_data[7],  # DRS (0 = off, 1 = on)
-            #'RevLightsPercent': car_data[8],  # Rev lights percentage
-            #'RevLightsBitValue': car_data[9],  # Rev lights bit value
-            #'BrakesTemperature': car_data[10:14],  # Brakes temperature
-            #'TyresSurfaceTemperature': car_data[14:18],  # Tyres surface temperature
-            #'TyresInnerTemperature': car_data[18:22],  # Tyres inner temperature
-            #'EngineTemperature': car_data[22],  # Engine temperature
-            #'TyresPressure': car_data[23:27],  # Tyres pressure
-            #'SurfaceType': car_data[27:31]  # Driving surface
-        }
-        car_telemetry_data.append(car_telemetry)
-
-    # Append the telemetry data to the list
+    # Add summary info and raw data to telemetry_data for easier inspection
     telemetry_data.append({
         'Packet ID': packet_id,
-        'Session UID': session_uid,
-        'Session Time': session_time,
-        'Player Car Index': player_car_index,
-        'Car Telemetry Data': car_telemetry_data
+        'Packet Name': packet_name,
+        'Data Size': len(data),
+        'Raw Data': list(data)  # Store the raw bytes as a list of integers for readability
     })
+
+    print(f"Received packet ID: {packet_id}, Size: {len(data)} bytes")
+
+    if packet_id not in printed_packets:
+        if packet_id == 0:  # Motion data
+            print(f"Packet 0 (Motion data) received. Data size: {len(data)} bytes.")
+            # Unpack motion data here (not shown for brevity)
+
+        elif packet_id == 1:  # Session data
+            print(f"Packet 1 (Session data) received. Data size: {len(data)} bytes.")
+            # Unpack session data here (not shown for brevity)
+
+        elif packet_id == 2:  # Lap data
+            print(f"Packet 2 (Lap data) received. Data size: {len(data)} bytes.")
+            # Unpack lap data here (not shown for brevity)
+
+        elif packet_id == 3:  # Event data
+            print(f"Packet 3 (Event data) received. Data size: {len(data)} bytes.")
+            # Unpack event data here (not shown for brevity)
+
+        elif packet_id == 4:  # Participants data
+            print(f"Packet 4 (Participants data) received. Data size: {len(data)} bytes.")
+            # Unpack participants data here (not shown for brevity)
+
+        elif packet_id == 5:  # Car setups data
+            print(f"Packet 5 (Car setups data) received. Data size: {len(data)} bytes.")
+            # Unpack car setups data here (not shown for brevity)
+
+        elif packet_id == 6:  # Car telemetry data
+            print(f"Packet 6 (Car telemetry data) received. Data size: {len(data)} bytes.")
+            # All previous code for car telemetry data is commented out for debugging
+
+        elif packet_id == 7:  # Car status data
+            print(f"Packet 7 (Car status data) received. Data size: {len(data)} bytes.")
+            # Unpack car status data here (not shown for brevity)
+
+        elif packet_id == 8:  # Final classification data
+            print(f"Packet 8 (Final classification data) received. Data size: {len(data)} bytes.")
+            # Unpack final classification data here (not shown for brevity)
+
+        elif packet_id == 9:  # Lobby info data
+            print(f"Packet 9 (Lobby info data) received. Data size: {len(data)} bytes.")
+            # Unpack lobby info data here (not shown for brevity)
+
+        elif packet_id == 10:  # Car damage data
+            print(f"Packet 10 (Car damage data) received. Data size: {len(data)} bytes.")
+            # Unpack car damage data here (not shown for brevity)
+
+        elif packet_id == 11:  # Session history data
+            print(f"Packet 11 (Session history data) received. Data size: {len(data)} bytes.")
+            # Unpack session history data here (not shown for brevity)
+
+        printed_packets.add(packet_id)
 
     # Save the telemetry data to a JSON file
     with open(JSON_FILE_PATH, 'w') as json_file:
@@ -82,7 +119,7 @@ def start_udp_server():
     print(f"Listening for telemetry data on {UDP_IP}:{UDP_PORT}...")
 
     while True:
-        data, addr = sock.recvfrom(4096)  # Buffer size is now 4096 bytes
+        data, addr = sock.recvfrom(2048)  # Adjust buffer size as needed
         parse_telemetry_data(data)
 
 if __name__ == "__main__":
