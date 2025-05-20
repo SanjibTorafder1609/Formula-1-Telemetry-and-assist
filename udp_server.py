@@ -17,98 +17,116 @@ telemetry_data = []
 printed_packets = set()
 
 def parse_telemetry_data(data):
-    # Check if the received data is large enough
-    if len(data) < 24:  # Minimum size for the header
+    if len(data) < 24:
         print("Received data is too small to contain a valid packet.")
         return
 
-    # Unpack the packet header
-    header_format = '>HBBBBQfIBB'  # Format for PacketHeader
+    # PacketHeader: Little Endian
+    header_format = '<HBBBBQfIBB'
     header_size = struct.calcsize(header_format)
-    header_data = struct.unpack_from(header_format, data, 0)
+    header = struct.unpack_from(header_format, data, 0)
 
-    # Extract header information
-    packet_id = header_data[4]
-    packet_names = {
-        0: "Motion data",
-        1: "Session data",
-        2: "Lap data",
-        3: "Event data",
-        4: "Participants data",
-        5: "Car setups data",
-        6: "Car telemetry data",
-        7: "Car status data",
-        8: "Final classification data",
-        9: "Lobby info data",
-        10: "Car damage data",
-        11: "Session history data"
-    }
-    packet_name = packet_names.get(packet_id, "Unknown")
-
-    # Add summary info and raw data to telemetry_data for easier inspection
-    telemetry_data.append({
-        'Packet ID': packet_id,
-        'Packet Name': packet_name,
-        'Data Size': len(data),
-        'Raw Data': list(data)  # Store the raw bytes as a list of integers for readability
-    })
-
-    print(f"Received packet ID: {packet_id}, Size: {len(data)} bytes")
+    packet_id = header[4]
+    player_index = header[8]
+    print(f"Packet ID: {packet_id}, Size: {len(data)}")
 
     if packet_id not in printed_packets:
-        if packet_id == 0:  # Motion data
-            print(f"Packet 0 (Motion data) received. Data size: {len(data)} bytes.")
-            # Unpack motion data here (not shown for brevity)
-
-        elif packet_id == 1:  # Session data
-            print(f"Packet 1 (Session data) received. Data size: {len(data)} bytes.")
-            # Unpack session data here (not shown for brevity)
-
-        elif packet_id == 2:  # Lap data
-            print(f"Packet 2 (Lap data) received. Data size: {len(data)} bytes.")
-            # Unpack lap data here (not shown for brevity)
-
-        elif packet_id == 3:  # Event data
-            print(f"Packet 3 (Event data) received. Data size: {len(data)} bytes.")
-            # Unpack event data here (not shown for brevity)
-
-        elif packet_id == 4:  # Participants data
-            print(f"Packet 4 (Participants data) received. Data size: {len(data)} bytes.")
-            # Unpack participants data here (not shown for brevity)
-
-        elif packet_id == 5:  # Car setups data
-            print(f"Packet 5 (Car setups data) received. Data size: {len(data)} bytes.")
-            # Unpack car setups data here (not shown for brevity)
-
-        elif packet_id == 6:  # Car telemetry data
-            print(f"Packet 6 (Car telemetry data) received. Data size: {len(data)} bytes.")
-            # All previous code for car telemetry data is commented out for debugging
-
-        elif packet_id == 7:  # Car status data
-            print(f"Packet 7 (Car status data) received. Data size: {len(data)} bytes.")
-            # Unpack car status data here (not shown for brevity)
-
-        elif packet_id == 8:  # Final classification data
-            print(f"Packet 8 (Final classification data) received. Data size: {len(data)} bytes.")
-            # Unpack final classification data here (not shown for brevity)
-
-        elif packet_id == 9:  # Lobby info data
-            print(f"Packet 9 (Lobby info data) received. Data size: {len(data)} bytes.")
-            # Unpack lobby info data here (not shown for brevity)
-
-        elif packet_id == 10:  # Car damage data
-            print(f"Packet 10 (Car damage data) received. Data size: {len(data)} bytes.")
-            # Unpack car damage data here (not shown for brevity)
-
-        elif packet_id == 11:  # Session history data
-            print(f"Packet 11 (Session history data) received. Data size: {len(data)} bytes.")
-            # Unpack session history data here (not shown for brevity)
-
+        print(f"First time receiving packet ID {packet_id}.")
         printed_packets.add(packet_id)
 
-    # Save the telemetry data to a JSON file
+    # if packet_id == 2:  # Lap Data Packet
+    #     lap_format = '<IIHHfffBBBBBBBBBBBBBBHHB'
+    #     lap_size = struct.calcsize(lap_format)
+    #     offset = header_size + (lap_size * player_index)
+
+    #     values = struct.unpack_from(lap_format, data, offset)
+    #     lap_data = {
+    #         'lastLapTimeInMS': values[0],
+    #         'currentLapTimeInMS': values[1],
+    #         'sector1TimeInMS': values[2],
+    #         'sector2TimeInMS': values[3],
+    #         'lapDistance': values[4],
+    #         'totalDistance': values[5],
+    #         'safetyCarDelta': values[6],
+    #         'carPosition': values[7],
+    #         'currentLapNum': values[8],
+    #         'pitStatus': values[9],
+    #         'numPitStops': values[10],
+    #         'sector': values[11],
+    #         'currentLapInvalid': values[12],
+    #         'penalties': values[13],
+    #         'warnings': values[14],
+    #         'numUnservedDriveThroughPens': values[15],
+    #         'numUnservedStopGoPens': values[16],
+    #         'gridPosition': values[17],
+    #         'driverStatus': values[18],
+    #         'resultStatus': values[19],
+    #         'pitLaneTimerActive': values[20],
+    #         'pitLaneTimeInLaneInMS': values[21],
+    #         'pitStopTimerInMS': values[22],
+    #         'pitStopShouldServePen': values[23]
+    #     }
+
+    #     print("Player lap data:")
+    #     print(json.dumps(lap_data, indent=2))
+
+    #     telemetry_data.append({
+    #         'header': {
+    #             'packetId': packet_id,
+    #             'frameIdentifier': header[7],
+    #             'playerCarIndex': player_index
+    #         },
+    #         'lapData': lap_data
+    #     })
+
+    elif packet_id == 6:  # Car Telemetry Packet
+        car_format = '<HfffBbHBBH4H4B4BH4f4B'
+        car_size = struct.calcsize(car_format)
+        offset = header_size + (car_size * player_index)
+
+        values = struct.unpack_from(car_format, data, offset)
+        car_data = {
+            'speed': values[0],
+            'throttle': values[1],
+            'steer': values[2],
+            'brake': values[3],
+            'clutch': values[4],
+            'gear': values[5],
+            'engineRPM': values[6],
+            'drs': values[7],
+            'revLightsPercent': values[8],
+            'revLightsBitValue': values[9],
+            'brakesTemperature': list(values[10:14]),
+            'tyresSurfaceTemperature': list(values[14:18]),
+            'tyresInnerTemperature': list(values[18:22]),
+            'engineTemperature': values[22],
+            'tyresPressure': list(values[23:27]),
+            'surfaceType': list(values[27:31])
+        }
+
+        # After car data array of 22 cars, read the footer
+        footer_offset = header_size + (car_size * 22)
+        mfd_panel_index, mfd_panel_secondary, suggested_gear = struct.unpack_from('<BBb', data, footer_offset)
+
+        print(f"Suggested Gear: {suggested_gear}")
+        print("Player car telemetry:")
+        print(json.dumps(car_data, indent=2))
+
+        telemetry_data.append({
+            'header': {
+                'packetId': packet_id,
+                'frameIdentifier': header[7],
+                'playerCarIndex': player_index
+            },
+            'carTelemetryData': car_data,
+            'mfdPanelIndex': mfd_panel_index,
+            'mfdPanelIndexSecondary': mfd_panel_secondary,
+            'suggestedGear': suggested_gear
+        })
+
+    # Save to file (append data)
     with open(JSON_FILE_PATH, 'w') as json_file:
-        json.dump(telemetry_data, json_file, indent=4)  # Write the data with indentation for readability
+        json.dump(telemetry_data, json_file, indent=2)
 
 def start_udp_server():
     UDP_IP = "127.0.0.1"
@@ -119,7 +137,7 @@ def start_udp_server():
     print(f"Listening for telemetry data on {UDP_IP}:{UDP_PORT}...")
 
     while True:
-        data, addr = sock.recvfrom(2048)  # Adjust buffer size as needed
+        data, addr = sock.recvfrom(2048)
         parse_telemetry_data(data)
 
 if __name__ == "__main__":
