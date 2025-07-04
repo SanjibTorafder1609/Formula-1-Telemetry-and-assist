@@ -3,6 +3,7 @@ import json
 import os
 import time
 from typing import Dict, Any, List, Optional
+from collections import defaultdict
 
 # Input and output paths
 INPUT_FILE = 'telemetry_logs\Mexico_2025-07-01_13-52-58.bin'
@@ -568,32 +569,35 @@ PACKET_DECODERS = {
 }
 
 def main():
-    decoded_data = []
     packets = read_packets(INPUT_FILE)
-    
-    # Process all packets
     print(f"Processing {len(packets)} packets...")
+
+    frames = defaultdict(dict)
     start_time = time.time()
-    
+
     for packet in packets:
         header = decode_packet_header(packet)
         packet_id = header['packet_id']
-        
-        # Get the appropriate decoder function
+        frame_id = header['frame_identifier']
+
         decoder = PACKET_DECODERS.get(packet_id)
         if decoder:
             decoded = decoder(packet, header)
             if decoded:
-                decoded_data.append(decoded)
-    
+                # Store under the frame_id → packet_type name (optional fallback to 'packet_{id}')
+                packet_name = decoder.__name__.replace("decode_", "")
+                frames[frame_id][packet_name] = decoded
+
     end_time = time.time()
-    print(f"Decoded {len(decoded_data)} packets in {end_time - start_time} seconds")
+    print(f"Decoded data for {len(frames)} frame_ids in {end_time - start_time:.2f} seconds")
 
-    # Write results to file
+    # Optional: sort by frame_id for consistent output
+    sorted_frames = dict(sorted(frames.items()))
+
     with open(OUTPUT_FILE, 'w') as f:
-        json.dump(decoded_data, f, indent=2)
+        json.dump(sorted_frames, f, indent=2)
 
-    print(f"Decoding to {OUTPUT_FILE} complete")
+    print(f" Decoding complete → saved to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
